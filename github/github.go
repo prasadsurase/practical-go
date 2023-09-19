@@ -1,19 +1,30 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"time"
 )
 
 func main() {
-	fmt.Println(getUserInfo("prasadsurase"))
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Millisecond)
+	defer cancel()
+	fmt.Println(getUserInfo(ctx, "prasadsurase"))
 }
 
-func getUserInfo(handle string) (string, int, error) {
-	url := "https://api.github.com/users/" + handle
-	resp, err := http.Get(url)
+func getUserInfo(ctx context.Context, handle string) (string, int, error) {
+	gitUrl := "https://api.github.com/users/" + url.PathEscape(handle)
+	// resp, err := http.Get(url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, gitUrl, nil)
+	if err != nil {
+		log.Fatalf("error: %s", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatalf("error: %s", err)
 	}
